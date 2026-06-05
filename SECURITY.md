@@ -4,9 +4,11 @@
 
 ## Filesystem Access
 
-Tools only allow paths inside `NBS_MCP_ALLOWED_ROOT`. If the environment variable is not set, the server uses the current working directory at startup.
+By default the server can access paths supplied by your MCP client. This keeps installation simple and matches common local MCP server behavior.
 
-Do not set `NBS_MCP_ALLOWED_ROOT` to a sensitive system directory.
+For locked-down setups, run the configurator with `--allowed-root <directory>`. That writes `NBS_MCP_ALLOWED_ROOT`, and the server will only read/write files inside that directory.
+
+Do not set an allowed root to a sensitive system directory.
 
 ## Reporting Issues
 

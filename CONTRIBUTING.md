@@ -35,6 +35,6 @@ python -m compileall .
 ## Design Notes
 
 - Keep MCP tools returning the same envelope: `{"ok": true, "data": ...}` or `{"ok": false, "error": ..., "details": ...}`.
-- Keep filesystem access behind `NBS_MCP_ALLOWED_ROOT`.
+- Keep optional filesystem restriction behavior working when `NBS_MCP_ALLOWED_ROOT` is set.
 - Prefer extending the compatibility functions in `nbs_core.py` instead of coupling tools directly to a specific `.nbs` library.
 - Add AI-readable, structured return data for new tools.

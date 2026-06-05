@@ -13,7 +13,7 @@ It is designed for AI-assisted music workflows: inspect a song, reason about lay
 - Generate melodies, chord progressions, basslines, drum patterns, simple songs, loops, and reharmonized layers.
 - Import/export CSV, JSON, MIDI, Markdown reports, and Minecraft function-style command notes.
 - Auto-configure common MCP clients with one command.
-- Restrict filesystem access with `NBS_MCP_ALLOWED_ROOT`.
+- Optional filesystem restriction for locked-down local setups.
 
 ## Status
 
@@ -97,13 +97,13 @@ nbs-mcp-install
 For advanced users, the configurable installer is:
 
 ```bash
-python configure_clients.py --allowed-root "C:/path/to/your/nbs-workspace"
+python configure_clients.py
 ```
 
 Or:
 
 ```bash
-nbs-mcp-configure --allowed-root "C:/path/to/your/nbs-workspace"
+nbs-mcp-configure
 ```
 
 Supported client targets:
@@ -119,12 +119,12 @@ Useful options:
 
 ```bash
 python configure_clients.py --dry-run
-python configure_clients.py --clients claude_desktop,cursor,codex --allowed-root "C:/path/to/your/nbs-workspace"
+python configure_clients.py --clients claude_desktop,cursor,codex
 python configure_clients.py --list-clients
 python configure_clients.py --remove --clients all
 ```
 
-By default the installer configures detected clients, writes an `nbs` MCP server entry using the current Python executable and this repository's `server.py`, and sets the allowed file root to this project directory. Use `--allowed-root` if you want AI clients to work in a separate `.nbs` music folder. Use `--command-mode script` if you prefer the installed `nbs-mcp-server` console command.
+By default the installer configures detected clients and writes an `nbs` MCP server entry using the current Python executable and this repository's `server.py`. Use `--command-mode script` if you prefer the installed `nbs-mcp-server` console command. Use `--allowed-root` only if you want to restrict file access to one directory.
 
 Manual configuration example:
 
@@ -133,10 +133,7 @@ Manual configuration example:
   "mcpServers": {
     "nbs": {
       "command": "python",
-      "args": ["C:/path/to/nbs-mcp-server/server.py"],
-      "env": {
-        "NBS_MCP_ALLOWED_ROOT": "C:/path/to/your/nbs-workspace"
-      }
+      "args": ["C:/path/to/nbs-mcp-server/server.py"]
     }
   }
 }
@@ -148,16 +145,19 @@ If you installed the console script, you can use:
 {
   "mcpServers": {
     "nbs": {
-      "command": "nbs-mcp-server",
-      "env": {
-        "NBS_MCP_ALLOWED_ROOT": "C:/path/to/your/nbs-workspace"
-      }
+      "command": "nbs-mcp-server"
     }
   }
 }
 ```
 
-`NBS_MCP_ALLOWED_ROOT` defaults to the server's current working directory. All file paths must stay inside that root.
+Optional security mode:
+
+```bash
+python configure_clients.py --allowed-root "C:/path/to/your/nbs-workspace"
+```
+
+When `--allowed-root` is used, the installer writes `NBS_MCP_ALLOWED_ROOT` and the server only reads/writes files inside that directory. Without it, paths are resolved normally.
 
 ## Response Format
 
@@ -357,7 +357,7 @@ python -m compileall .
 python tests/smoke_test.py
 ```
 
-The smoke test creates temporary `.nbs`, `.mid`, `.csv`, and `.md` files inside a temporary allowed root and removes them automatically.
+The smoke test creates temporary `.nbs`, `.mid`, `.csv`, and `.md` files and removes them automatically.
 
 ## Project Structure
 
@@ -383,7 +383,7 @@ The project includes a self-contained modern NBS v5 binary reader/writer. `pynbs
 
 ## Security
 
-The server is intended to run locally. It does not allow arbitrary filesystem access: all paths are resolved under `NBS_MCP_ALLOWED_ROOT`. Do not point that variable at a sensitive system directory.
+The server is intended to run locally. By default it can access paths supplied by your MCP client. For locked-down setups, configure with `--allowed-root` to restrict access to one directory.
 
 ## Publishing Checklist
 

@@ -106,8 +106,8 @@ def _platform_paths() -> dict[str, ClientTarget]:
     }
 
 
-def server_entry(allowed_root: Path, command_mode: str) -> dict[str, Any]:
-    env = {"NBS_MCP_ALLOWED_ROOT": str(allowed_root)}
+def server_entry(allowed_root: Path | None, command_mode: str) -> dict[str, Any]:
+    env = {"NBS_MCP_ALLOWED_ROOT": str(allowed_root)} if allowed_root else {}
     if command_mode == "script":
         return {"command": "nbs-mcp-server", "args": [], "env": env}
     server_py = PROJECT_ROOT / "server.py"
@@ -295,7 +295,7 @@ def parse_clients(value: str, available: dict[str, ClientTarget]) -> list[str]:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Configure common AI MCP clients for nbs-mcp-server.")
     parser.add_argument("--clients", default="detected", help="Comma-separated clients, 'detected', or 'all'. Known: claude_desktop,cursor,windsurf,cline,roo_code,codex")
-    parser.add_argument("--allowed-root", default=str(PROJECT_ROOT), help="Directory that nbs-mcp-server may read/write.")
+    parser.add_argument("--allowed-root", default=None, help="Optional directory restriction for files nbs-mcp-server may read/write.")
     parser.add_argument("--command-mode", choices=["python", "script"], default="python", help="Use current Python + server.py, or the installed nbs-mcp-server script.")
     parser.add_argument("--dry-run", action="store_true", help="Show what would change without writing files.")
     parser.add_argument("--remove", action="store_true", help="Remove the nbs server entry from selected clients.")
@@ -320,7 +320,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"    note: {target.notes}")
         return 0
 
-    allowed_root = Path(args.allowed_root).expanduser().resolve()
+    allowed_root = Path(args.allowed_root).expanduser().resolve() if args.allowed_root else None
     entry = server_entry(allowed_root, args.command_mode)
     selected = parse_clients(args.clients, clients)
     if not selected:

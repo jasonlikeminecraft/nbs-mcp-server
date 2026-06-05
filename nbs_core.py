@@ -52,20 +52,24 @@ class NbsFormatError(ValueError):
 
 
 def allowed_root() -> Path:
-    root = os.environ.get("NBS_MCP_ALLOWED_ROOT") or os.getcwd()
+    root = os.environ.get("NBS_MCP_ALLOWED_ROOT")
+    if not root:
+        return Path(os.getcwd()).resolve()
     return Path(root).expanduser().resolve()
 
 
 def resolve_safe_path(path: str | os.PathLike[str], *, must_exist: bool = False) -> Path:
     candidate = Path(path).expanduser()
     if not candidate.is_absolute():
-        candidate = allowed_root() / candidate
+        candidate = Path(os.getcwd()) / candidate
     resolved = candidate.resolve()
-    root = allowed_root()
-    try:
-        resolved.relative_to(root)
-    except ValueError as exc:
-        raise PermissionError(f"path is outside allowed root: {resolved}") from exc
+    root_value = os.environ.get("NBS_MCP_ALLOWED_ROOT")
+    if root_value:
+        root = allowed_root()
+        try:
+            resolved.relative_to(root)
+        except ValueError as exc:
+            raise PermissionError(f"path is outside allowed root: {resolved}") from exc
     if must_exist and not resolved.exists():
         raise FileNotFoundError(str(resolved))
     return resolved

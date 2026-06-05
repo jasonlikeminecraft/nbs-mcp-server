@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 import subprocess
 import sys
 import tempfile
@@ -91,6 +92,16 @@ def main() -> None:
         help_result = subprocess.run([sys.executable, str(PROJECT_ROOT / "install.py"), "--help"], check=False, capture_output=True, text=True)
         if help_result.returncode != 0 or "Configure common AI MCP clients" not in help_result.stdout:
             raise AssertionError("install.py --help failed")
+        default_config = subprocess.run([sys.executable, str(PROJECT_ROOT / "configure_clients.py"), "--clients", "codex", "--dry-run"], check=False, capture_output=True, text=True)
+        if default_config.returncode != 0:
+            raise AssertionError("configure_clients default dry-run failed")
+        default_entry = json.loads(default_config.stdout)["entry"]
+        if default_entry.get("env"):
+            raise AssertionError("default installer entry should not set env")
+        restricted_config = subprocess.run([sys.executable, str(PROJECT_ROOT / "configure_clients.py"), "--clients", "codex", "--dry-run", "--allowed-root", str(root)], check=False, capture_output=True, text=True)
+        restricted_entry = json.loads(restricted_config.stdout)["entry"]
+        if "NBS_MCP_ALLOWED_ROOT" not in restricted_entry.get("env", {}):
+            raise AssertionError("--allowed-root should set NBS_MCP_ALLOWED_ROOT")
 
         expected = [base, patched, midi, imported, csv_path, report, looped]
         missing = [str(path) for path in expected if not path.exists()]
