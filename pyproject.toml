@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nbs-mcp-server"
+version = "0.1.0"
+description = "An MCP server for reading, analyzing, creating, editing, converting, and exporting Minecraft Note Block Studio .nbs files."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "nbs-mcp-server contributors" }
+]
+keywords = ["mcp", "minecraft", "note-block-studio", "nbs", "music", "ai-tools"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Sound/Audio",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "mcp>=1.0.0",
+  "pydantic>=2.0.0",
+  "pynbs>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jasonlikeminecraft/nbs-mcp-server"
+Issues = "https://github.com/jasonlikeminecraft/nbs-mcp-server/issues"
+Repository = "https://github.com/jasonlikeminecraft/nbs-mcp-server"
+
+[project.scripts]
+nbs-mcp-server = "server:main"
+
+[tool.setuptools]
+py-modules = [
+  "server",
+  "schemas",
+  "nbs_core",
+  "nbs_tools",
+  "music_utils",
+  "midi_utils",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
