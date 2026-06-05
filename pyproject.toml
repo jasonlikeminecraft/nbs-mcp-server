@@ -39,7 +39,9 @@ Repository = "https://github.com/jasonlikeminecraft/nbs-mcp-server"
 [project.scripts]
 nbs-mcp-server = "server:main"
 nbs-mcp-configure = "configure_clients:main"
-nbs-mcp-install = "configure_clients:main"
+nbs-mcp-install = "lifecycle:install"
+nbs-mcp-update = "lifecycle:update"
+nbs-mcp-uninstall = "lifecycle:uninstall"
 
 [tool.setuptools]
 py-modules = [
@@ -50,7 +52,10 @@ py-modules = [
   "music_utils",
   "midi_utils",
   "configure_clients",
+  "lifecycle",
   "install",
+  "update",
+  "uninstall",
 ]
 
 [tool.pytest.ini_options]

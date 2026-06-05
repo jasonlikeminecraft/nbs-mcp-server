@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import sys
 
-from lifecycle import install
+from lifecycle import update
 
 
 if __name__ == "__main__":
-    raise SystemExit(install(sys.argv[1:]))
+    raise SystemExit(update(sys.argv[1:]))

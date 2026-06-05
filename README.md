@@ -34,12 +34,11 @@ git clone https://github.com/jasonlikeminecraft/nbs-mcp-server.git
 cd nbs-mcp-server
 ```
 
-Install dependencies:
+Create an environment:
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-pip install -e .
 ```
 
 On macOS/Linux:
@@ -47,22 +46,41 @@ On macOS/Linux:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
 ```
 
-You can also install with:
-
-```bash
-pip install -r requirements.txt
-```
-
-Then run the zero-argument installer:
+Install and auto-configure detected AI clients:
 
 ```bash
 python install.py
 ```
 
-The installer detects supported MCP clients that already have config files and adds `nbs-mcp-server` automatically. Existing config files are backed up before changes.
+`install.py` installs the Python package in editable mode, detects supported MCP clients, writes the `nbs` server config, and backs up changed config files.
+
+## Updating
+
+From the project folder:
+
+```bash
+python update.py
+```
+
+`update.py` runs `git pull`, reinstalls the package, and refreshes client configuration.
+
+## Uninstalling
+
+From the project folder:
+
+```bash
+python uninstall.py
+```
+
+This removes `nbs-mcp-server` from detected AI client configs and asks whether to uninstall the Python package.
+
+Uninstall without prompts:
+
+```bash
+python uninstall.py -y
+```
 
 ## Running
 
@@ -92,6 +110,13 @@ After editable install, the same installer is available as:
 
 ```bash
 nbs-mcp-install
+```
+
+Update and uninstall commands are also available after install:
+
+```bash
+nbs-mcp-update
+nbs-mcp-uninstall
 ```
 
 For advanced users, the configurable installer is:
