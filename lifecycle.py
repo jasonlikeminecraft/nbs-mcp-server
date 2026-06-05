@@ -88,3 +88,55 @@ def uninstall(argv: list[str] | None = None) -> int:
     run([sys.executable, "-m", "pip", "uninstall", "-y", "nbs-mcp-server"], check=False)
     print("Uninstall complete. Restart your AI client.")
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="nbs-mcp", description="Manage nbs-mcp-server.")
+    subparsers = parser.add_subparsers(dest="command")
+
+    install_parser = subparsers.add_parser("install", help="Install and configure detected MCP clients.")
+    install_parser.add_argument("--skip-pip", action="store_true", help="Skip pip install -e .")
+    install_parser.add_argument("--dry-run", action="store_true", help="Show client config changes without writing them.")
+    install_parser.add_argument("--clients", default="detected", help="Clients to configure: detected, all, or comma-separated names.")
+
+    update_parser = subparsers.add_parser("update", help="Update and refresh detected MCP client configs.")
+    update_parser.add_argument("--skip-git", action="store_true", help="Skip git pull.")
+    update_parser.add_argument("--skip-pip", action="store_true", help="Skip pip install -e .")
+    update_parser.add_argument("--clients", default="detected", help="Clients to configure: detected, all, or comma-separated names.")
+
+    uninstall_parser = subparsers.add_parser("uninstall", help="Remove client config and optionally uninstall package.")
+    uninstall_parser.add_argument("--clients", default="detected", help="Clients to remove from: detected, all, or comma-separated names.")
+    uninstall_parser.add_argument("--keep-package", action="store_true", help="Only remove client configs; keep the Python package installed.")
+    uninstall_parser.add_argument("--yes", "-y", action="store_true", help="Do not ask before uninstalling the Python package.")
+
+    configure_parser = subparsers.add_parser("configure", help="Run the advanced MCP client configurator.")
+    configure_parser.add_argument("args", nargs=argparse.REMAINDER, help="Arguments passed to nbs-mcp-configure.")
+
+    args = parser.parse_args(argv)
+    if args.command is None:
+        parser.print_help()
+        return 0
+    if args.command == "install":
+        forwarded = ["--clients", args.clients]
+        if args.skip_pip:
+            forwarded.append("--skip-pip")
+        if args.dry_run:
+            forwarded.append("--dry-run")
+        return install(forwarded)
+    if args.command == "update":
+        forwarded = ["--clients", args.clients]
+        if args.skip_git:
+            forwarded.append("--skip-git")
+        if args.skip_pip:
+            forwarded.append("--skip-pip")
+        return update(forwarded)
+    if args.command == "uninstall":
+        forwarded = ["--clients", args.clients]
+        if args.keep_package:
+            forwarded.append("--keep-package")
+        if args.yes:
+            forwarded.append("--yes")
+        return uninstall(forwarded)
+    if args.command == "configure":
+        return configure_main(args.args)
+    return 0

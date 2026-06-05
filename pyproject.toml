@@ -37,6 +37,7 @@ Issues = "https://github.com/jasonlikeminecraft/nbs-mcp-server/issues"
 Repository = "https://github.com/jasonlikeminecraft/nbs-mcp-server"
 
 [project.scripts]
+nbs-mcp = "lifecycle:main"
 nbs-mcp-server = "server:main"
 nbs-mcp-configure = "configure_clients:main"
 nbs-mcp-install = "lifecycle:install"

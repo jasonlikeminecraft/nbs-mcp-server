@@ -37,6 +37,7 @@ def main() -> None:
             validate_nbs,
         )
         from configure_clients import main as configure_main
+        from lifecycle import main as lifecycle_main
 
         base = root / "base.nbs"
         patched = root / "patched.nbs"
@@ -97,6 +98,13 @@ def main() -> None:
             help_result = subprocess.run([sys.executable, str(PROJECT_ROOT / script), "--help"], check=False, capture_output=True, text=True)
             if help_result.returncode != 0 or expected_help not in help_result.stdout:
                 raise AssertionError(f"{script} --help failed")
+        for args in [[], ["install", "--help"], ["update", "--help"], ["uninstall", "--help"], ["configure", "--help"]]:
+            try:
+                status = lifecycle_main(args)
+            except SystemExit as exc:
+                status = int(exc.code or 0)
+            if status != 0:
+                raise AssertionError(f"nbs-mcp {' '.join(args)} failed")
         default_config = subprocess.run([sys.executable, str(PROJECT_ROOT / "configure_clients.py"), "--clients", "codex", "--dry-run"], check=False, capture_output=True, text=True)
         if default_config.returncode != 0:
             raise AssertionError("configure_clients default dry-run failed")

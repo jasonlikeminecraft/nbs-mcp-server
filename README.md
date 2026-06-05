@@ -56,22 +56,34 @@ python install.py
 
 `install.py` installs the Python package in editable mode, detects supported MCP clients, writes the `nbs` server config, and backs up changed config files.
 
+After installation, you can use the unified command:
+
+```bash
+nbs-mcp install
+```
+
 ## Updating
 
 From the project folder:
 
 ```bash
-python update.py
+nbs-mcp update
 ```
 
-`update.py` runs `git pull`, reinstalls the package, and refreshes client configuration.
+`nbs-mcp update` runs `git pull`, reinstalls the package, and refreshes client configuration.
+
+If the command is not available yet, use:
+
+```bash
+python update.py
+```
 
 ## Uninstalling
 
 From the project folder:
 
 ```bash
-python uninstall.py
+nbs-mcp uninstall
 ```
 
 This removes `nbs-mcp-server` from detected AI client configs and asks whether to uninstall the Python package.
@@ -79,7 +91,13 @@ This removes `nbs-mcp-server` from detected AI client configs and asks whether t
 Uninstall without prompts:
 
 ```bash
-python uninstall.py -y
+nbs-mcp uninstall -y
+```
+
+If the command is not available, use:
+
+```bash
+python uninstall.py
 ```
 
 ## Running
@@ -115,6 +133,9 @@ nbs-mcp-install
 Update and uninstall commands are also available after install:
 
 ```bash
+nbs-mcp install
+nbs-mcp update
+nbs-mcp uninstall
 nbs-mcp-update
 nbs-mcp-uninstall
 ```
