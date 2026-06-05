@@ -12,6 +12,7 @@ It is designed for AI-assisted music workflows: inspect a song, reason about lay
 - Analyze estimated key, chord regions, out-of-scale notes, melody layer, layer roles, and editable regions.
 - Generate melodies, chord progressions, basslines, drum patterns, simple songs, loops, and reharmonized layers.
 - Import/export CSV, JSON, MIDI, Markdown reports, and Minecraft function-style command notes.
+- Auto-configure common MCP clients with one command.
 - Restrict filesystem access with `NBS_MCP_ALLOWED_ROOT`.
 
 ## Status
@@ -73,7 +74,38 @@ The server uses MCP stdio transport through `FastMCP`.
 
 ## MCP Client Configuration
 
-Example configuration:
+You can configure common MCP clients automatically:
+
+```bash
+python configure_clients.py --allowed-root "C:/path/to/your/nbs-workspace"
+```
+
+After editable install:
+
+```bash
+nbs-mcp-configure --allowed-root "C:/path/to/your/nbs-workspace"
+```
+
+Supported client targets:
+
+- Claude Desktop
+- Cursor
+- Windsurf
+- Cline
+- Roo Code
+
+Useful options:
+
+```bash
+python configure_clients.py --dry-run --allowed-root "C:/path/to/your/nbs-workspace"
+python configure_clients.py --clients claude_desktop,cursor --allowed-root "C:/path/to/your/nbs-workspace"
+python configure_clients.py --list-clients
+python configure_clients.py --remove --clients all
+```
+
+By default the configurator writes an `nbs` MCP server entry using the current Python executable and this repository's `server.py`. That is the most reliable setup for source installs. Use `--command-mode script` if you prefer the installed `nbs-mcp-server` console command.
+
+Manual configuration example:
 
 ```json
 {

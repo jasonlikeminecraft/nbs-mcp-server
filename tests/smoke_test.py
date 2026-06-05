@@ -34,6 +34,7 @@ def main() -> None:
             read_nbs_notes,
             validate_nbs,
         )
+        from configure_clients import main as configure_main
 
         base = root / "base.nbs"
         patched = root / "patched.nbs"
@@ -74,6 +75,18 @@ def main() -> None:
         assert_ok(compare_nbs(str(base), str(patched)), "compare_nbs")
         assert_ok(make_loop(str(base), str(looped), repetitions=2), "make_loop")
         assert_ok(export_markdown_summary(str(base), str(report)), "export_markdown_summary")
+        configure_status = configure_main(
+            [
+                "--clients",
+                "claude_desktop",
+                "--allowed-root",
+                str(root),
+                "--dry-run",
+                "--create-missing",
+            ]
+        )
+        if configure_status != 0:
+            raise AssertionError("configure_clients dry-run failed")
 
         expected = [base, patched, midi, imported, csv_path, report, looped]
         missing = [str(path) for path in expected if not path.exists()]
