@@ -21,6 +21,7 @@ class ClientTarget:
     key: str
     name: str
     paths: tuple[Path, ...]
+    format: str = "json"
     notes: str = ""
 
 
@@ -99,8 +100,9 @@ def _platform_paths() -> dict[str, ClientTarget]:
         "claude_desktop": ClientTarget("claude_desktop", "Claude Desktop", claude),
         "cursor": ClientTarget("cursor", "Cursor", cursor),
         "windsurf": ClientTarget("windsurf", "Windsurf", windsurf),
-        "cline": ClientTarget("cline", "Cline", cline_paths, "VS Code extension config if the extension has created its storage folder."),
-        "roo_code": ClientTarget("roo_code", "Roo Code", roo_paths, "VS Code extension config if the extension has created its storage folder."),
+        "cline": ClientTarget("cline", "Cline", cline_paths, notes="VS Code extension config if the extension has created its storage folder."),
+        "roo_code": ClientTarget("roo_code", "Roo Code", roo_paths, notes="VS Code extension config if the extension has created its storage folder."),
+        "codex": ClientTarget("codex", "Codex", (home / ".codex" / "config.toml",), "toml", "Codex CLI/Desktop config.toml."),
     }
 
 
@@ -138,6 +140,65 @@ def write_json(path: Path, data: dict[str, Any], dry_run: bool, backup: bool) ->
     with path.open("w", encoding="utf-8", newline="\n") as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
         file.write("\n")
+    return backup_path
+
+
+def _quote_toml_string(value: str) -> str:
+    return json.dumps(value)
+
+
+def _toml_array(values: list[str]) -> str:
+    return "[" + ", ".join(_quote_toml_string(value) for value in values) + "]"
+
+
+def codex_block(entry: dict[str, Any]) -> str:
+    lines = [
+        f"[mcp_servers.{SERVER_NAME}]",
+        f"command = {_quote_toml_string(str(entry['command']))}",
+    ]
+    args = entry.get("args", [])
+    if args:
+        lines.append(f"args = {_toml_array([str(item) for item in args])}")
+    env = entry.get("env", {})
+    if env:
+        lines.append("env = { " + ", ".join(f"{key} = {_quote_toml_string(str(value))}" for key, value in env.items()) + " }")
+    return "\n".join(lines) + "\n"
+
+
+def remove_codex_block(text: str) -> tuple[str, bool]:
+    lines = text.splitlines()
+    output: list[str] = []
+    changed = False
+    index = 0
+    header = f"[mcp_servers.{SERVER_NAME}]"
+    while index < len(lines):
+        stripped = lines[index].strip()
+        if stripped == header:
+            changed = True
+            index += 1
+            while index < len(lines):
+                next_stripped = lines[index].strip()
+                if next_stripped.startswith("[") and next_stripped.endswith("]"):
+                    break
+                index += 1
+            continue
+        output.append(lines[index])
+        index += 1
+    cleaned = "\n".join(output).rstrip()
+    return (cleaned + "\n" if cleaned else ""), changed
+
+
+def write_text(path: Path, text: str, dry_run: bool, backup: bool) -> str | None:
+    if dry_run:
+        return None
+    path.parent.mkdir(parents=True, exist_ok=True)
+    backup_path: str | None = None
+    if backup and path.exists():
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        backup_file = path.with_suffix(path.suffix + f".bak-{timestamp}")
+        shutil.copy2(path, backup_file)
+        backup_path = str(backup_file)
+    path.write_text(text, encoding="utf-8", newline="\n")
     return backup_path
 
 
@@ -186,6 +247,35 @@ def configure_path(path: Path, entry: dict[str, Any], remove: bool, dry_run: boo
     }
 
 
+def configure_codex_path(path: Path, entry: dict[str, Any], remove: bool, dry_run: bool, backup: bool) -> dict[str, Any]:
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    without_block, had_block = remove_codex_block(text)
+    if remove:
+        changed = had_block
+        action = "removed" if changed else "unchanged"
+        new_text = without_block
+    else:
+        block = codex_block(entry)
+        new_text = without_block.rstrip() + ("\n\n" if without_block.strip() else "") + block
+        changed = new_text != text
+        action = "updated" if had_block else "added"
+        if not changed:
+            action = "unchanged"
+    backup_path = write_text(path, new_text, dry_run=dry_run, backup=backup) if changed else None
+    dry_run_action = {
+        "added": "would_add",
+        "updated": "would_update",
+        "removed": "would_remove",
+        "unchanged": "unchanged",
+    }.get(action, "would_change")
+    return {
+        "path": str(path),
+        "action": dry_run_action if dry_run and changed else action,
+        "changed": changed,
+        "backup": backup_path,
+    }
+
+
 def parse_clients(value: str, available: dict[str, ClientTarget]) -> list[str]:
     if value == "all":
         return list(available)
@@ -198,7 +288,7 @@ def parse_clients(value: str, available: dict[str, ClientTarget]) -> list[str]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Configure common AI MCP clients for nbs-mcp-server.")
-    parser.add_argument("--clients", default="all", help="Comma-separated clients or 'all'. Known: claude_desktop,cursor,windsurf,cline,roo_code")
+    parser.add_argument("--clients", default="all", help="Comma-separated clients or 'all'. Known: claude_desktop,cursor,windsurf,cline,roo_code,codex")
     parser.add_argument("--allowed-root", default=str(PROJECT_ROOT), help="Directory that nbs-mcp-server may read/write.")
     parser.add_argument("--command-mode", choices=["python", "script"], default="python", help="Use current Python + server.py, or the installed nbs-mcp-server script.")
     parser.add_argument("--dry-run", action="store_true", help="Show what would change without writing files.")
@@ -236,7 +326,10 @@ def main(argv: list[str] | None = None) -> int:
             continue
         for path in paths:
             try:
-                result = configure_path(path, entry, remove=args.remove, dry_run=args.dry_run, backup=not args.no_backup)
+                if target.format == "toml":
+                    result = configure_codex_path(path, entry, remove=args.remove, dry_run=args.dry_run, backup=not args.no_backup)
+                else:
+                    result = configure_path(path, entry, remove=args.remove, dry_run=args.dry_run, backup=not args.no_backup)
                 result["client"] = target.name
                 results.append(result)
             except Exception as exc:

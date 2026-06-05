@@ -93,12 +93,13 @@ Supported client targets:
 - Windsurf
 - Cline
 - Roo Code
+- Codex
 
 Useful options:
 
 ```bash
 python configure_clients.py --dry-run --allowed-root "C:/path/to/your/nbs-workspace"
-python configure_clients.py --clients claude_desktop,cursor --allowed-root "C:/path/to/your/nbs-workspace"
+python configure_clients.py --clients claude_desktop,cursor,codex --allowed-root "C:/path/to/your/nbs-workspace"
 python configure_clients.py --list-clients
 python configure_clients.py --remove --clients all
 ```
