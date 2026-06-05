@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -87,6 +88,9 @@ def main() -> None:
         )
         if configure_status != 0:
             raise AssertionError("configure_clients dry-run failed")
+        help_result = subprocess.run([sys.executable, str(PROJECT_ROOT / "install.py"), "--help"], check=False, capture_output=True, text=True)
+        if help_result.returncode != 0 or "Configure common AI MCP clients" not in help_result.stdout:
+            raise AssertionError("install.py --help failed")
 
         expected = [base, patched, midi, imported, csv_path, report, looped]
         missing = [str(path) for path in expected if not path.exists()]

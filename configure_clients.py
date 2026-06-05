@@ -276,9 +276,15 @@ def configure_codex_path(path: Path, entry: dict[str, Any], remove: bool, dry_ru
     }
 
 
+def detected_client_keys(available: dict[str, ClientTarget]) -> list[str]:
+    return [key for key, target in available.items() if choose_paths(target, create_missing=False)]
+
+
 def parse_clients(value: str, available: dict[str, ClientTarget]) -> list[str]:
     if value == "all":
         return list(available)
+    if value == "detected":
+        return detected_client_keys(available)
     result = [item.strip() for item in value.split(",") if item.strip()]
     unknown = sorted(set(result) - set(available))
     if unknown:
@@ -288,7 +294,7 @@ def parse_clients(value: str, available: dict[str, ClientTarget]) -> list[str]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Configure common AI MCP clients for nbs-mcp-server.")
-    parser.add_argument("--clients", default="all", help="Comma-separated clients or 'all'. Known: claude_desktop,cursor,windsurf,cline,roo_code,codex")
+    parser.add_argument("--clients", default="detected", help="Comma-separated clients, 'detected', or 'all'. Known: claude_desktop,cursor,windsurf,cline,roo_code,codex")
     parser.add_argument("--allowed-root", default=str(PROJECT_ROOT), help="Directory that nbs-mcp-server may read/write.")
     parser.add_argument("--command-mode", choices=["python", "script"], default="python", help="Use current Python + server.py, or the installed nbs-mcp-server script.")
     parser.add_argument("--dry-run", action="store_true", help="Show what would change without writing files.")
@@ -317,6 +323,9 @@ def main(argv: list[str] | None = None) -> int:
     allowed_root = Path(args.allowed_root).expanduser().resolve()
     entry = server_entry(allowed_root, args.command_mode)
     selected = parse_clients(args.clients, clients)
+    if not selected:
+        print(json.dumps({"server_name": SERVER_NAME, "entry": entry, "results": [], "message": "No existing MCP client config files were detected. Run with --list-clients to inspect paths, or --clients all --create-missing to create config files."}, indent=2, ensure_ascii=False))
+        return 0
     results = []
     for key in selected:
         target = clients[key]

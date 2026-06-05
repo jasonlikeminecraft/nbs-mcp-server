@@ -34,7 +34,7 @@ git clone https://github.com/jasonlikeminecraft/nbs-mcp-server.git
 cd nbs-mcp-server
 ```
 
-Create an environment and install:
+Install dependencies:
 
 ```bash
 python -m venv .venv
@@ -56,6 +56,14 @@ You can also install with:
 pip install -r requirements.txt
 ```
 
+Then run the zero-argument installer:
+
+```bash
+python install.py
+```
+
+The installer detects supported MCP clients that already have config files and adds `nbs-mcp-server` automatically. Existing config files are backed up before changes.
+
 ## Running
 
 Run the MCP server with:
@@ -74,13 +82,25 @@ The server uses MCP stdio transport through `FastMCP`.
 
 ## MCP Client Configuration
 
-You can configure common MCP clients automatically:
+Most users only need:
+
+```bash
+python install.py
+```
+
+After editable install, the same installer is available as:
+
+```bash
+nbs-mcp-install
+```
+
+For advanced users, the configurable installer is:
 
 ```bash
 python configure_clients.py --allowed-root "C:/path/to/your/nbs-workspace"
 ```
 
-After editable install:
+Or:
 
 ```bash
 nbs-mcp-configure --allowed-root "C:/path/to/your/nbs-workspace"
@@ -98,13 +118,13 @@ Supported client targets:
 Useful options:
 
 ```bash
-python configure_clients.py --dry-run --allowed-root "C:/path/to/your/nbs-workspace"
+python configure_clients.py --dry-run
 python configure_clients.py --clients claude_desktop,cursor,codex --allowed-root "C:/path/to/your/nbs-workspace"
 python configure_clients.py --list-clients
 python configure_clients.py --remove --clients all
 ```
 
-By default the configurator writes an `nbs` MCP server entry using the current Python executable and this repository's `server.py`. That is the most reliable setup for source installs. Use `--command-mode script` if you prefer the installed `nbs-mcp-server` console command.
+By default the installer configures detected clients, writes an `nbs` MCP server entry using the current Python executable and this repository's `server.py`, and sets the allowed file root to this project directory. Use `--allowed-root` if you want AI clients to work in a separate `.nbs` music folder. Use `--command-mode script` if you prefer the installed `nbs-mcp-server` console command.
 
 Manual configuration example:
 
